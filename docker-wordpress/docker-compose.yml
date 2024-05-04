@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mariadb:10
+    container_name: wp-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - ./mysql:/var/lib/mysql
+  wordpress-fpm:
+    image: wordpress:6.5-fpm-alpine
+    container_name: wp-fpm
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - ./wp_files:/var/www/html
+    environment:
+      WORDPRESS_DB_HOST: "${WORDPRESS_DB_HOST}"
+      WORDPRESS_DB_NAME: "${WORDPRESS_DB_NAME}"
+      WORDPRESS_DB_USER: "${WORDPRESS_DB_USER}"
+      WORDPRESS_DB_PASSWORD: "${WORDPRESS_DB_PASSWORD}"
+  nginx:
+    image: nginx:alpine
+    container_name: wp-nginx
+    restart: always
+    depends_on:
+      - wordpress-fpm
+    ports:
+      - 8085:80
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./wp_files:/var/www/html
+volumes:
+  wp_files:
